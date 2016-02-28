@@ -1,2 +1,2 @@
 # hutils
-Some utils for my go/http (sleepy) apis
+Some utils for my go/http (sleepy REST) APIs
