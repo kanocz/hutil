@@ -41,6 +41,16 @@ func Sleepy1Result(result interface{}) (int, interface{}, http.Header) {
 	return 200, [1]interface{}{result}, JSON
 }
 
+// Sleepy1in1Map warps sigle value into map for rest/sleepy
+func Sleepy1in1Map(result interface{}, key string) (int, interface{}, http.Header) {
+	return 200, map[string]interface{}{key: result}, JSON
+}
+
+// Sleepy1inNMap warps sigle value into array in map for rest/sleepy
+func Sleepy1inNMap(result interface{}, key string) (int, interface{}, http.Header) {
+	return 200, map[string]interface{}{key: [1]interface{}{result}}, JSON
+}
+
 // Request2json reads requests body and unmarshals json from it
 func Request2json(request *http.Request, v interface{}) error {
 	defer request.Body.Close()
