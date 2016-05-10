@@ -20,8 +20,15 @@ func Error(w http.ResponseWriter, r *http.Request, code int, message string) {
 	}
 }
 
+// WriteRawJSON func ouputs message with 200 status
+func WriteRawJSON(w http.ResponseWriter, r *http.Request, message string) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(200)
+	w.Write([]byte(message))
+}
+
 // OK func simple outputs json with 200 status
-func OK(w http.ResponseWriter, r *http.Request, j map[string]interface{}) {
+func OK(w http.ResponseWriter, r *http.Request, j interface{}) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	encoded, err := json.Marshal(j)
@@ -34,6 +41,17 @@ func OK(w http.ResponseWriter, r *http.Request, j map[string]interface{}) {
 func SleepyError(status int, msg string, request *http.Request) (int, interface{}, http.Header) {
 	log.Println(status, msg, request.URL, request.RemoteAddr)
 	return status, map[string]string{"error": msg}, JSON
+}
+
+// SleepyStError function outputs structured json error for sleepy framework
+func SleepyStError(msg string, request *http.Request) (int, interface{}, http.Header) {
+	log.Println("sleepyStError:", msg, request.URL, request.RemoteAddr)
+	return 200, map[string]string{"status": "error", "message": msg}, JSON
+}
+
+// SleepyStResult warps sigle value into {"status": status, key:result}
+func SleepyStResult(result interface{}, key string) (int, interface{}, http.Header) {
+	return 200, map[string]interface{}{"status": "ok", key: result}, JSON
 }
 
 // Sleepy1Result warps sigle value into array for rest/sleepy
