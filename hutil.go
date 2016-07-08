@@ -10,7 +10,6 @@ import (
 // JSON http Content-type header
 var JSON = http.Header{"Content-type": {"application/json"}, "Cache-Control": {"no-cache, no-store, must-revalidate"}, "Pragma": {"no-cache"}}
 
-
 // Error func ouputs error message in json format
 func Error(w http.ResponseWriter, r *http.Request, code int, message string) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -53,6 +52,11 @@ func SleepyStError(msg string, request *http.Request) (int, interface{}, http.He
 // SleepyStResult warps sigle value into {"status": status, key:result}
 func SleepyStResult(result interface{}, key string) (int, interface{}, http.Header) {
 	return 200, map[string]interface{}{"status": "ok", key: result}, JSON
+}
+
+// SleepyStOk return just "status:ok" result
+func SleepyStOk(result interface{}, key string) (int, interface{}, http.Header) {
+	return 200, map[string]string{"status": "ok"}, JSON
 }
 
 // Sleepy1Result warps sigle value into array for rest/sleepy
