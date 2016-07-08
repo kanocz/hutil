@@ -1,6 +1,7 @@
 package hutil
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -168,4 +169,37 @@ func CacheGetEncoded(key string, value interface{}) error {
 		return err
 	}
 	return nil
+}
+
+// CachePublish publish value to redis channel
+func CachePublish(channel string, value interface{}) error {
+	content, err := json.Marshal(value)
+	if nil != err {
+		return err
+	}
+
+	c := rcPool.Get()
+	defer c.Close()
+	res, err := c.Do("PUBLISH", channel, content)
+
+	if nil != err {
+		return err
+	}
+
+	if res != "OK" {
+		if str, ok := res.(string); ok {
+			return errors.New(str)
+		}
+	}
+
+	return nil
+}
+
+// CacheSubscribe subscribes to redis channel
+func CacheSubscribe(channel string) redis.PubSubConn {
+	c := rcPool.Get()
+	s := redis.PubSubConn{Conn: c}
+	s.Subscribe(channel)
+
+	return s
 }
