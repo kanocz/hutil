@@ -55,7 +55,7 @@ func SleepyStResult(result interface{}, key string) (int, interface{}, http.Head
 }
 
 // SleepyStOk return just "status:ok" result
-func SleepyStOk(result interface{}, key string) (int, interface{}, http.Header) {
+func SleepyStOk() (int, interface{}, http.Header) {
 	return 200, map[string]string{"status": "ok"}, JSON
 }
 
