@@ -8,7 +8,8 @@ import (
 )
 
 // JSON http Content-type header
-var JSON = http.Header{"Content-type": {"application/json"}}
+var JSON = http.Header{"Content-type": {"application/json"}, "Cache-Control": {"no-cache, no-store, must-revalidate"}, "Pragma": {"no-cache"}}
+
 
 // Error func ouputs error message in json format
 func Error(w http.ResponseWriter, r *http.Request, code int, message string) {
