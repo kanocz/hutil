@@ -14,10 +14,11 @@ var (
 	slackname  string
 	slackimg   string
 	slackemoji string
+	slackchan  string
 )
 
 // SlackInit function sets slack team, token and channel for logging
-func SlackInit(url, name, icon string) {
+func SlackInit(url, name, icon, channel string) {
 	slackurl = url
 	slackname = name
 	if strings.HasPrefix(icon, ":") {
@@ -25,6 +26,7 @@ func SlackInit(url, name, icon string) {
 	} else {
 		slackurl = icon
 	}
+	slackchan = channel
 }
 
 // SlackLog sends log message to slack's #log channel
@@ -42,6 +44,9 @@ func SlackLog(message string) error {
 		}
 		if "" != slackurl {
 			data["icon_url"] = slackurl
+		}
+		if "" != slackchan {
+			data["channel"] = slackchan
 		}
 
 		jsondata, err := json.Marshal(data)
