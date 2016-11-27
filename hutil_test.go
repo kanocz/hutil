@@ -24,7 +24,7 @@ func Test_IsLangID(t *testing.T) {
 
 	for _, d := range data {
 		if IsLangID(d.lang) != d.result {
-			t.Error(fmt.Sprintf("IsLangID did not work as expected. IsLangID(%s) is %v but has to be %v", d.lang, IsLangID(d.lang), d.result))
+			t.Errorf(fmt.Sprintf("IsLangID did not work as expected. IsLangID(%s) is %v but has to be %v", d.lang, IsLangID(d.lang), d.result))
 		}
 	}
 }
@@ -48,7 +48,7 @@ func Test_IsHexString(t *testing.T) {
 
 	for _, d := range data {
 		if IsHexString(d.lang) != d.result {
-			t.Error(fmt.Sprintf("IsHexString did not work as expected. IsHexString(%s) is %v but has to be %v", d.lang, IsHexString(d.lang), d.result))
+			t.Errorf(fmt.Sprintf("IsHexString did not work as expected. IsHexString(%s) is %v but has to be %v", d.lang, IsHexString(d.lang), d.result))
 		}
 	}
 }
@@ -73,7 +73,7 @@ func Test_IsUUID(t *testing.T) {
 
 	for _, d := range data {
 		if IsUUID(d.lang) != d.result {
-			t.Error(fmt.Sprintf("IsUUID did not work as expected. IsUUID(%s) is %v but has to be %v", d.lang, IsUUID(d.lang), d.result))
+			t.Errorf(fmt.Sprintf("IsUUID did not work as expected. IsUUID(%s) is %v but has to be %v", d.lang, IsUUID(d.lang), d.result))
 		}
 	}
 
