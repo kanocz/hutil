@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"sync/atomic"
+
 	"github.com/garyburd/redigo/redis"
 	"github.com/tinylib/msgp/msgp"
 )
@@ -14,26 +16,106 @@ var (
 	rcPool redis.Pool
 )
 
-// CacheDial simply creates connection to redis
-func CacheDial(network, address, password, dbnum string) (redis.Conn, error) {
+// internal function to detect redis master
+func getMaster(servers []string, password string, dbnum int, last string, data []interface{}) (string, redis.Conn) {
+	tested := make(map[string]bool, len(servers))
 
-	c, err := redis.Dial(network, address)
+	if nil == data && "" != last {
+		c, _ := CacheDial(last, password, dbnum)
+		var m bool
+		if nil != c {
+			m, data, _ = IsRedisMaster(c)
+			if m {
+				return last, c
+			}
+			c.Do("QUIT")
+			c.Close()
+		}
 
-	if err != nil {
-		return nil, err
+		tested[last] = true
 	}
 
-	if password != "" {
-		if _, err := c.Do("AUTH", password); err != nil {
-			c.Close()
-			return nil, err
+	if nil != data && len(data) > 2 {
+		// if we just have data in some case...
+		mode, _ := redis.String(data[0], nil)
+		if "slave" == mode {
+			s, _ := redis.String(data[1], nil)
+			p, _ := redis.Int(data[2], nil)
+			if "" != s && p > 0 {
+				// try to connect to detected master
+				test := fmt.Sprintf("%s:%d", s, p)
+				c, _ := CacheDial(test, password, dbnum)
+				if nil != c {
+					if m, _, _ := IsRedisMaster(c); m {
+						return test, c
+					}
+					c.Do("QUIT")
+					c.Close()
+				}
+				tested[test] = true
+			}
 		}
 	}
 
-	if _, err := c.Do("SELECT", dbnum); err != nil {
-		c.Close()
-		return nil, err
+	for _, server := range servers {
+		if _, ok := tested[server]; ok {
+			continue
+		}
+
+		c, _ := CacheDial(server, password, dbnum)
+		if nil != c {
+			if m, _, _ := IsRedisMaster(c); m {
+				return server, c
+			}
+			c.Do("QUIT")
+			c.Close()
+		}
+		tested[server] = true
 	}
+
+	return "", nil
+}
+
+// IsRedisMaster returns true, nil, []interface{} if connected to redis master
+func IsRedisMaster(c redis.Conn) (bool, []interface{}, error) {
+	if nil == c {
+		return false, nil, nil
+	}
+
+	res, err := c.Do("ROLE")
+	if nil != err {
+		return false, nil, err
+	}
+	values, err := redis.Values(res, nil)
+	if nil != err {
+		return false, nil, err
+	}
+
+	if len(values) < 3 {
+		return false, values, errors.New("Invalid ROLE responce")
+	}
+
+	role, err := redis.String(values[0], nil)
+	if nil != err {
+		return false, values, err
+	}
+
+	if "master" != role {
+		return false, values, errors.New("Not a master")
+	}
+
+	return true, values, nil
+}
+
+// CacheDial simply creates connection to redis
+func CacheDial(address, password string, dbnum int) (redis.Conn, error) {
+	// todo: move timeouts to config
+	c, err := redis.Dial("tcp", address,
+		redis.DialConnectTimeout(time.Second),
+		redis.DialWriteTimeout(time.Second),
+		redis.DialDatabase(dbnum),
+		redis.DialPassword(password),
+	)
 
 	return c, err
 }
@@ -46,20 +128,56 @@ func CacheAlive() error {
 	if nil != err {
 		return err
 	}
+
 	return nil
 }
 
 // CacheInit creates redis connections pool and tests paramaters
-func CacheInit(network, address, password, dbnum string) error {
+func CacheInit(servers []string, password string, dbnum int) error {
+	master, _ := getMaster(servers, password, dbnum, servers[0], nil)
+	if "" == master {
+		return errors.New("No redis master found")
+	}
+
+	var lastServer atomic.Value
+	lastServer.Store(master)
+
 	rcPool = redis.Pool{
-		MaxIdle:     64,                // max number of idle connections... TODO: move to config
-		IdleTimeout: 300 * time.Second, // 5-minutes idle
+		MaxIdle:     64,               // max number of idle connections... TODO: move to config
+		IdleTimeout: 30 * time.Second, // 30 seconds
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
-			_, err := c.Do("PING")
+			// test not more than every 5 seconds
+			if time.Since(t) < (time.Second * 5) {
+				return nil
+			}
+
+			m, _, err := IsRedisMaster(c)
+			if !m {
+				return errors.New("Not a master")
+			}
+
 			return err
 		},
 		Dial: func() (redis.Conn, error) {
-			return CacheDial(network, address, password, dbnum)
+			last := lastServer.Load().(string)
+			c, _ := CacheDial(last, password, dbnum)
+			m, data, _ := IsRedisMaster(c)
+			if m {
+				return c, nil
+			}
+
+			// real close connection, not just return to pool
+			if nil != c {
+				c.Do("QUIT")
+				c.Close()
+			}
+
+			master, c := getMaster(servers, password, dbnum, last, data)
+			if "" == master {
+				return nil, errors.New("Unable to find redis master")
+			}
+			lastServer.Store(master)
+			return c, nil
 		},
 	}
 	return CacheAlive()
