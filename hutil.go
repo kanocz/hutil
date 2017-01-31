@@ -2,6 +2,7 @@ package hutil
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -76,6 +77,10 @@ func Sleepy1inNMap(result interface{}, key string) (int, interface{}, http.Heade
 
 // Request2json reads requests body and unmarshals json from it
 func Request2json(request *http.Request, v interface{}) error {
+	if nil == request.Body {
+		return errors.New("Body is nil")
+	}
+
 	defer request.Body.Close()
 	body, err := ioutil.ReadAll(request.Body)
 
