@@ -194,17 +194,19 @@ func CacheSet(key string, value interface{}, timeout int64) error {
 	if res != "OK" {
 		return errors.New(res.(string))
 	}
-	res, err = c.Do("EXPIRE", key, timeout)
-	if nil != err {
-		return err
-	}
-
-	if rI, ok := res.(int64); ok {
-		if 1 != rI {
-			return errors.New("Unable to set EXPIRE ri / " + fmt.Sprintf("%#v %T", rI, rI))
+	if timeout > 0 {
+		res, err = c.Do("EXPIRE", key, timeout)
+		if nil != err {
+			return err
 		}
-	} else if rS, ok := res.(string); ok && "1" != rS {
-		return errors.New("Unable to set EXPIRE O / " + fmt.Sprintf("%#v %T", res, res))
+
+		if rI, ok := res.(int64); ok {
+			if 1 != rI {
+				return errors.New("Unable to set EXPIRE ri / " + fmt.Sprintf("%#v %T", rI, rI))
+			}
+		} else if rS, ok := res.(string); ok && "1" != rS {
+			return errors.New("Unable to set EXPIRE O / " + fmt.Sprintf("%#v %T", res, res))
+		}
 	}
 
 	return nil
