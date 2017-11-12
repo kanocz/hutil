@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"runtime"
 )
 
 // JSON http Content-type header
@@ -19,6 +20,8 @@ func Error(w http.ResponseWriter, r *http.Request, code int, message string) {
 	if nil == err {
 		w.Write(encoded)
 	}
+	_, file, no, _ := runtime.Caller(1)
+	log.Printf("%s:%d %d %s %s %s", file, no, code, message, r.URL, r.RemoteAddr)
 }
 
 // WriteRawJSON func ouputs message with 200 status
@@ -40,13 +43,15 @@ func OK(w http.ResponseWriter, r *http.Request, j interface{}) {
 
 // SleepyError function outputs json error and needed values for sleepy framework
 func SleepyError(status int, msg string, request *http.Request) (int, interface{}, http.Header) {
-	log.Println(status, msg, request.URL, request.RemoteAddr)
+	_, file, no, _ := runtime.Caller(1)
+	log.Printf("%s:%d %d %s %s %s", file, no, status, msg, request.URL, request.RemoteAddr)
 	return status, map[string]string{"error": msg}, JSON
 }
 
 // SleepyStError function outputs structured json error for sleepy framework
 func SleepyStError(msg string, request *http.Request) (int, interface{}, http.Header) {
-	log.Println("sleepyStError:", msg, request.URL, request.RemoteAddr)
+	_, file, no, _ := runtime.Caller(1)
+	log.Printf("%s:%d sleepyStError: %s %s %s", file, no, msg, request.URL, request.RemoteAddr)
 	return 200, map[string]string{"status": "error", "message": msg}, JSON
 }
 
