@@ -38,6 +38,9 @@ func OK(w http.ResponseWriter, r *http.Request, j interface{}) {
 	encoded, err := json.Marshal(j)
 	if nil == err {
 		w.Write(encoded)
+	} else {
+		_, file, no, _ := runtime.Caller(1)
+		log.Printf("%s:%d error json encoding: %s %s %s", file, no, err.Error(), r.URL, r.RemoteAddr)
 	}
 }
 
