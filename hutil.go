@@ -24,6 +24,30 @@ func Error(w http.ResponseWriter, r *http.Request, code int, message string) {
 	log.Printf("%s:%d %d %s %s %s", file, no, code, message, r.URL, r.RemoteAddr)
 }
 
+// ErrorLog func ouputs error message in json format and logs separate log comment
+func ErrorLog(w http.ResponseWriter, r *http.Request, code int, message string, comment string) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(code)
+	encoded, err := json.Marshal(map[string]string{"error": message})
+	if nil == err {
+		w.Write(encoded)
+	}
+	_, file, no, _ := runtime.Caller(1)
+	log.Printf("%s:%d %d %s / %s %s %s", file, no, code, message, comment, r.URL, r.RemoteAddr)
+}
+
+// ErrorLogErr func ouputs error message in json format and logs error
+func ErrorLogErr(w http.ResponseWriter, r *http.Request, code int, message string, err error) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(code)
+	encoded, err := json.Marshal(map[string]string{"error": message})
+	if nil == err {
+		w.Write(encoded)
+	}
+	_, file, no, _ := runtime.Caller(1)
+	log.Printf("%s:%d %d %s / %v %s %s", file, no, code, message, err, r.URL, r.RemoteAddr)
+}
+
 // WriteRawJSON func ouputs message with 200 status
 func WriteRawJSON(w http.ResponseWriter, r *http.Request, message string) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
