@@ -16,7 +16,7 @@ var JSON = http.Header{"Content-type": {"application/json"}, "Cache-Control": {"
 func Error(w http.ResponseWriter, r *http.Request, code int, message string) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(code)
-	encoded, err := json.Marshal(map[string]string{"error": message})
+	encoded, err := json.Marshal(map[string]string{"status": "error", "error": message})
 	if nil == err {
 		w.Write(encoded)
 	}
@@ -28,7 +28,7 @@ func Error(w http.ResponseWriter, r *http.Request, code int, message string) {
 func ErrorLog(w http.ResponseWriter, r *http.Request, code int, message string, comment string) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(code)
-	encoded, err := json.Marshal(map[string]string{"error": message})
+	encoded, err := json.Marshal(map[string]string{"status": "error", "error": message})
 	if nil == err {
 		w.Write(encoded)
 	}
@@ -40,7 +40,7 @@ func ErrorLog(w http.ResponseWriter, r *http.Request, code int, message string, 
 func ErrorLogErr(w http.ResponseWriter, r *http.Request, code int, message string, err error) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(code)
-	encoded, err := json.Marshal(map[string]string{"error": message})
+	encoded, err := json.Marshal(map[string]string{"status": "error", "error": message})
 	if nil == err {
 		w.Write(encoded)
 	}
