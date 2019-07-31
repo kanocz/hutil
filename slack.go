@@ -67,7 +67,10 @@ func SlackLog(message string) error {
 		if err != nil {
 			log.Println("Error sending message to slack:", err)
 		}
-		resp.Body.Close()
+		if nil != resp && nil != resp.Body {
+			resp.Body.Close()
+		}
+
 	}()
 	return nil
 }
