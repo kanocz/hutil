@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/satori/go.uuid"
+	"github.com/google/uuid"
 )
 
 const sessionTimeout = 3600 * 24 * 30
@@ -19,12 +19,12 @@ type SessionInfo struct {
 
 // SessionNew returns id of newly created session
 func SessionNew(data interface{}, w http.ResponseWriter) (string, error) {
-	id, err := uuid.NewV4()
+	uuid, err := uuid.NewUUID()
 	if nil != err {
 		return "", err
 	}
 
-	key := id.String()
+	key := uuid.String()
 	err = CacheSetEncoded("session_"+key, data, sessionTimeout)
 
 	if nil != err {
