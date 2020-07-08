@@ -19,14 +19,13 @@ type SessionInfo struct {
 
 // SessionNew returns id of newly created session
 func SessionNew(data interface{}, w http.ResponseWriter) (string, error) {
-	uuid, err := uuid.NewUUID()
+	id, err := uuid.NewUUID()
 	if nil != err {
 		return "", err
 	}
 
-	key := uuid.String()
+	key := id.String()
 	err = CacheSetEncoded("session_"+key, data, sessionTimeout)
-
 	if nil != err {
 		return "", err
 	}
