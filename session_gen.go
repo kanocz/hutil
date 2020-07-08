@@ -50,6 +50,7 @@ func (z *SessionInfo) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	return
 }
 
+// Msgsize ...
 func (z SessionInfo) Msgsize() (s int) {
 	s = 1 + 4 + msgp.Int64Size
 	return
