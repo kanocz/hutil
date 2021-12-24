@@ -12,7 +12,6 @@ import (
 var (
 	slackurl   string
 	slackname  string
-	slackimg   string
 	slackemoji string
 	slackchan  string
 )
@@ -31,21 +30,21 @@ func SlackInit(url, name, icon, channel string) {
 
 // SlackLog sends log message to slack's #log channel
 func SlackLog(message string) error {
-	if "" == slackurl {
-		return errors.New("Slack url is not set")
+	if slackurl == "" {
+		return errors.New("slack url is not set")
 	}
 	go func() {
 		data := map[string]string{"text": message}
-		if "" != slackname {
+		if slackname != "" {
 			data["username"] = slackname
 		}
-		if "" != slackemoji {
+		if slackemoji != "" {
 			data["icon_emoji"] = slackemoji
 		}
-		if "" != slackurl {
+		if slackurl != "" {
 			data["icon_url"] = slackurl
 		}
-		if "" != slackchan {
+		if slackchan != "" {
 			data["channel"] = slackchan
 		}
 

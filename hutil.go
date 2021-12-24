@@ -40,8 +40,8 @@ func ErrorLog(w http.ResponseWriter, r *http.Request, code int, message string, 
 func ErrorLogErr(w http.ResponseWriter, r *http.Request, code int, message string, err error) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(code)
-	encoded, err := json.Marshal(map[string]string{"status": "error", "error": message})
-	if nil == err {
+	encoded, jerr := json.Marshal(map[string]string{"status": "error", "error": message})
+	if nil == jerr {
 		w.Write(encoded)
 	}
 	_, file, no, _ := runtime.Caller(1)
@@ -110,7 +110,7 @@ func Sleepy1inNMap(result interface{}, key string) (int, interface{}, http.Heade
 // Request2json reads requests body and unmarshals json from it
 func Request2json(request *http.Request, v interface{}) error {
 	if nil == request.Body {
-		return errors.New("Body is nil")
+		return errors.New("body is nil")
 	}
 
 	defer request.Body.Close()
@@ -130,7 +130,7 @@ func Request2json(request *http.Request, v interface{}) error {
 
 // IsHexString allows to check hashes and so on
 func IsHexString(str string) bool {
-	if "" == str {
+	if str == "" {
 		return false
 	}
 	for _, x := range str {
@@ -143,7 +143,7 @@ func IsHexString(str string) bool {
 
 // IsUUID allows to check is string contains only hex symbols and dashes
 func IsUUID(str string) bool {
-	if "" == str {
+	if str == "" {
 		return false
 	}
 	for _, x := range str {

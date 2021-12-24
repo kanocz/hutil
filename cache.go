@@ -20,7 +20,7 @@ var (
 func getMaster(servers []string, password string, dbnum int, last string, data []interface{}) (string, redis.Conn) {
 	tested := make(map[string]bool, len(servers))
 
-	if nil == data && "" != last {
+	if data == nil && last != "" {
 		c, _ := CacheDial(last, password, dbnum)
 		var m bool
 		if nil != c {
@@ -38,10 +38,10 @@ func getMaster(servers []string, password string, dbnum int, last string, data [
 	if nil != data && len(data) > 2 {
 		// if we just have data in some case...
 		mode, _ := redis.String(data[0], nil)
-		if "slave" == mode {
+		if mode == "slave" {
 			s, _ := redis.String(data[1], nil)
 			p, _ := redis.Int(data[2], nil)
-			if "" != s && p > 0 {
+			if s != "" && p > 0 {
 				// try to connect to detected master
 				test := fmt.Sprintf("%s:%d", s, p)
 				c, _ := CacheDial(test, password, dbnum)
@@ -92,7 +92,7 @@ func IsRedisMaster(c redis.Conn) (bool, []interface{}, error) {
 	}
 
 	if len(values) < 3 {
-		return false, values, errors.New("Invalid ROLE responce")
+		return false, values, errors.New("invalid ROLE responce")
 	}
 
 	role, err := redis.String(values[0], nil)
@@ -100,8 +100,8 @@ func IsRedisMaster(c redis.Conn) (bool, []interface{}, error) {
 		return false, values, err
 	}
 
-	if "master" != role {
-		return false, values, errors.New("Not a master")
+	if role != "master" {
+		return false, values, errors.New("not a master")
 	}
 
 	return true, values, nil
@@ -135,8 +135,8 @@ func CacheAlive() error {
 // CacheInit creates redis connections pool and tests paramaters
 func CacheInit(servers []string, password string, dbnum int) error {
 	master, _ := getMaster(servers, password, dbnum, servers[0], nil)
-	if "" == master {
-		return errors.New("No redis master found")
+	if master == "" {
+		return errors.New("no redis master found")
 	}
 
 	var lastServer atomic.Value
@@ -153,7 +153,7 @@ func CacheInit(servers []string, password string, dbnum int) error {
 
 			m, _, err := IsRedisMaster(c)
 			if !m {
-				return errors.New("Not a master")
+				return errors.New("not a master")
 			}
 
 			return err
@@ -173,8 +173,8 @@ func CacheInit(servers []string, password string, dbnum int) error {
 			}
 
 			master, c := getMaster(servers, password, dbnum, last, data)
-			if "" == master {
-				return nil, errors.New("Unable to find redis master")
+			if master == "" {
+				return nil, errors.New("unable to find redis master")
 			}
 			lastServer.Store(master)
 			return c, nil
@@ -201,10 +201,10 @@ func CacheSet(key string, value interface{}, timeout int64) error {
 		}
 
 		if rI, ok := res.(int64); ok {
-			if 1 != rI {
+			if rI != 1 {
 				return errors.New("Unable to set EXPIRE ri / " + fmt.Sprintf("%#v %T", rI, rI))
 			}
-		} else if rS, ok := res.(string); ok && "1" != rS {
+		} else if rS, ok := res.(string); ok && rS != "1" {
 			return errors.New("Unable to set EXPIRE O / " + fmt.Sprintf("%#v %T", res, res))
 		}
 	}
@@ -221,10 +221,10 @@ func CacheDelete(key string) error {
 		return err
 	}
 	rI, ok := res.(int64)
-	if ok && 1 != rI {
-		return errors.New("Key not found in redis database")
-	} else if "1" != res {
-		return errors.New("Key not found in redis database")
+	if ok && rI != 1 {
+		return errors.New("key not found in redis database")
+	} else if res != "1" {
+		return errors.New("key not found in redis database")
 	}
 	return nil
 }
@@ -239,10 +239,10 @@ func CacheProlong(key string, timeout int64) error {
 	}
 
 	rI, ok := res.(int64)
-	if ok && 1 != rI {
-		return errors.New("Unable to prolong cache")
-	} else if "1" != res {
-		return errors.New("Unable to prolong cache: " + res.(string))
+	if ok && rI != 1 {
+		return errors.New("unable to prolong cache")
+	} else if res != "1" {
+		return errors.New("unable to prolong cache: " + res.(string))
 	}
 
 	return nil
@@ -280,7 +280,7 @@ func CacheGetEncoded(key string, value interface{}) error {
 	}
 
 	if nil == temp {
-		return errors.New("No cache value")
+		return errors.New("no cache value")
 	}
 
 	value.(msgp.Unmarshaler).UnmarshalMsg(temp)

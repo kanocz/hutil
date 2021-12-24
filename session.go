@@ -10,7 +10,8 @@ import (
 	"github.com/google/uuid"
 )
 
-const sessionTimeout = 3600 * 24 * 30
+const sessionDurationDays = 365
+const sessionTimeout = 3600 * 24 * sessionDurationDays
 
 // SessionInfo is type stored to redis
 type SessionInfo struct {
@@ -30,7 +31,7 @@ func SessionNew(data interface{}, w http.ResponseWriter) (string, error) {
 		return "", err
 	}
 
-	http.SetCookie(w, &http.Cookie{Name: "authtoken", Value: key, Expires: time.Now().AddDate(0, 0, 30), Path: "/"})
+	http.SetCookie(w, &http.Cookie{Name: "authtoken", Value: key, Expires: time.Now().AddDate(0, 0, sessionDurationDays), Path: "/"})
 
 	return key, nil
 }
@@ -61,12 +62,12 @@ func SessionGetUser(r *http.Request) (int64, error) {
 	}
 
 	if !IsUUID(cookie.Value) {
-		return 0, errors.New("Invalid session key")
+		return 0, errors.New("invalid session key")
 	}
 
 	sessinfo := SessionInfo{}
 	if err := CacheGetEncoded("session_"+cookie.Value, &sessinfo); nil != err {
-		return 0, errors.New("Invalid session id: " + err.Error())
+		return 0, errors.New("invalid session id: " + err.Error())
 	}
 
 	return sessinfo.UID, nil
