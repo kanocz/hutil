@@ -72,3 +72,25 @@ func SessionGetUser(r *http.Request) (int64, error) {
 
 	return sessinfo.UID, nil
 }
+
+// SessionLogoutAllUserSessions reads all stored sessions and delete ones belong to user
+func SessionLogoutAllUserSessions(uid int64) error {
+
+	sessions, err := CacheList("session_*")
+	if err != nil {
+		return err
+	}
+
+	sessinfo := SessionInfo{}
+	for _, session := range sessions {
+		if err := CacheGetEncoded(session, &sessinfo); nil != err {
+			continue
+		}
+		if sessinfo.UID != uid {
+			continue
+		}
+		CacheDelete(session)
+	}
+
+	return nil
+}

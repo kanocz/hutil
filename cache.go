@@ -262,6 +262,21 @@ func CacheGet(key string) ([]byte, error) {
 	return res.([]byte), nil
 }
 
+// CacheList returns keys for patern
+func CacheList(patern string) ([]string, error) {
+	c := rcPool.Get()
+	defer c.Close()
+
+	res, err := c.Do("KEYS", patern)
+	if nil != err {
+		return nil, err
+	}
+	if nil == res {
+		return nil, nil
+	}
+	return redis.Strings(res, nil)
+}
+
 // CacheSetEncoded sets key/value using gob enoder
 func CacheSetEncoded(key string, value interface{}, timeout int64) error {
 	out, err := value.(msgp.Marshaler).MarshalMsg(nil)
